@@ -18,6 +18,7 @@ LSFmod
 SeeSaw
 QTGMC
 SMDegrain
+TemporalDegrain2
 mClean
 STPressoHD
 MLDegrain
@@ -32,10 +33,6 @@ HQDeringmod
 MaskedDHA
 daamod
 LUSM
-MedSharp
-MedSharp2
-blah
-ReCon
 """
 ### Main functions below
 def FineSharp(clip, mode=1, sstr=2.5, cstr=None, xstr=0, lstr=1.5, pstr=1.28, ldmp=None, hdmp=0.01, rep=12):
@@ -558,7 +555,7 @@ def LSFmod(clip, strength=100, Smode=None, Smethod=None, kernel=11, preblur=Fals
                         - dw          = ow
                         - dh          = oh
     """
-    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r30/havsfunc.py#L3968
+    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r31/havsfunc.py#L4492
 
     if not isinstance(clip, vs.VideoNode):
         raise TypeError('LSFmod: This is not a clip!')
@@ -707,10 +704,10 @@ def LSFmod(clip, strength=100, Smode=None, Smethod=None, kernel=11, preblur=Fals
     elif Lmode == 2:
         limit1 = core.std.MaskedMerge(normsharp, normal, inflate)
     elif Lmode == 3:
-        zero = haf.Clamp(normsharp, bright_limit, dark_limit, 0, 0)
+        zero = haf.Clamp(normsharp, brightlimit, darklimit, 0, 0)
         limit1 = core.std.MaskedMerge(normal, zero, inflate)
     elif Lmode == 4:
-        second = haf.Clamp(normsharp, bright_limit, dark_limit, max(overshoot2, 0)*i, max(undershoot2, 0)*i)
+        second = haf.Clamp(normsharp, brightlimit, darklimit, max(overshoot2, 0)*i, max(undershoot2, 0)*i)
         limit1 = core.std.MaskedMerge(second, normal, inflate)
     else:
         limit1 = R(normsharp, tmp, abs(Lmode))
@@ -1036,7 +1033,7 @@ def QTGMC(clip, Preset='Slower', TR0=None, TR1=None, TR2=None, Rep0=None, Rep1=0
     --- REQUIREMENTS ---
 
     Core plugins:
-      MVTools / MVTools Single Precision
+      MVTools / MVTools-sf
       Miscellaneous Filters
       znedi3 / nnedi3
       RGVS / RGSF
@@ -1058,7 +1055,7 @@ def QTGMC(clip, Preset='Slower', TR0=None, TR1=None, TR2=None, Rep0=None, Rep1=0
     Don't be obsessed with using slower settings as the differences can be small. HD material benefits little from extreme settings (and will be very slow)
     There are many settings for tweaking the script, full details in the main documentation. You can display settings currently being used with QTGMC(ShowSettings=True)
     """
-    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r30/havsfunc.py#L636
+    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r31/havsfunc.py#L846
     
     if not isinstance(clip, vs.VideoNode) or clip.format.color_family not in [vs.GRAY, vs.YUV]:
         raise TypeError("QTGMC: This is not a GRAY or YUV clip!")
@@ -1701,7 +1698,7 @@ def QTGMC_Interpolate(clip, InputType, EdiMode, NNSize, NNeurons, EdiQual, EdiMa
     elif EdiMode == 'nnedi3':
         interp = NNEDI3(clip, field=field, planes=planes, **nnedi3_args)
     elif EdiMode == 'eedi3+nnedi3':
-        interp =  EEDI3(clip, field=field, planes=planes, **eedi3_args, sclip=myNNEDI3(clip, field=field, planes=planes, **nnedi3_args))
+        interp =  EEDI3(clip, field=field, planes=planes, **eedi3_args, sclip=NNEDI3(clip, field=field, planes=planes, **nnedi3_args))
     elif EdiMode == 'eedi3':
         interp =  EEDI3(clip, field=field, planes=planes, **eedi3_args)
     else:
@@ -1931,7 +1928,7 @@ def SMDegrain(clip, tr=2, thSAD=314, thSADC=None, RefineMotion=False, contrashar
     VideoHelp thread: (https://forum.videohelp.com/threads/369142)
     """
     # tr > 3 uses mvsf hence requires float input, also requires mvmulti module.
-    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r30/havsfunc.py#L2999
+    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r31/havsfunc.py#L3186
 
     bd = clip.format.bits_per_sample
     isFLOAT = clip.format.sample_type == vs.FLOAT
@@ -2140,8 +2137,278 @@ def SMDegrain(clip, tr=2, thSAD=314, thSADC=None, RefineMotion=False, contrashar
         return haf.Weave(output, TFF)
     else:
         return output
+
+
+def TemporalDegrain2(clip, degrainTR=2, degrainPlane=4, meAlg=5, meAlgPar=None, meSubpel=None, meBlksz=None, meTM=False,
+    limitSigma=None, limitBlksz=None, fftThreads=None, postFFT=0, postTR=1, postSigma=1, knlDevId=0, ppSAD1=10, ppSAD2=5, 
+    ppSCD1=4, thSCD2=100, DCT=0, SubPelInterp=2, SrchClipPP=3, GlobalMotion=True, ChromaMotion=True, rec=False, extraSharp=False):
+    """
+    Temporal Degrain Updated by ErazorTT                               
+                                                                          
+    Based on function by Sagekilla, idea + original script created by Didee
+    Works as a simple temporal degraining function that'll remove             
+    MOST or even ALL grain and noise from video sources,                      
+    including dancing grain, like the grain found on 300.                     
+    Also note, the parameters don't need to be tweaked much.                  
+                                                                           
+    Required plugins:                                                         
+    FFT3DFilter: https://github.com/myrsloik/VapourSynth-FFT3DFilter   
+    MVtools(sf): https://github.com/dubhater/vapoursynth-mvtools (https://github.com/IFeelBloated/vapoursynth-mvtools-sf)                   
+                                                                           
+    Optional plugins:                                                         
+    dfttest: https://github.com/HomeOfVapourSynthEvolution/VapourSynth-DFTTest            
+    KNLMeansCL: https://github.com/Khanattila/KNLMeansCL
     
+    recommendation: 
+    1. start with default settings
+    2a.if there is too much denoising for your taste use degrainTR=1
+    2b.if more denoising is needed try postFFT=1 with postSigma=1, then tune postSigma (obvious blocking and banding of the sky are indications of a value which is at least a factor 2 too high)
+    3. do not increase degrainTR above 1/8 of the fps (at 24fps up to 3)
+    4. if there are any issues with banding switch to postFFT=3
+
+    use only the following knobs (all other settings should already be were they need to be):
+    - degrainTR, temporal radius of degrain, usefull range: min=1, default=2, max=fps/8. Higher values do clean the video more, but also increase probability of wrongly identified motion meAlg which leads to washed out regions
+    - postFFT, if you want to remove absolutely all remaining noise suggestion is to use 3 (dfttest) for its quality, 1/2 (ff3dfilter) is much faster but can introduce banding, 4 is KNLMeansCL.
+    - postSigma, increase it to remove all the remaining noise you want removed, but do not increase too much since unnecessary high values have severe negative impact on either banding and/or sharpness
+    - degrainPlane, if you just want to denoise the chroma use 3 (helps with compressability with the clip being almost identical to the original)
+    """
+
+    if not isinstance(clip, vs.VideoNode) or clip.format.color_family not in [vs.GRAY, vs.YUV]:
+        raise TypeError("TemporalDegrain2: This is not a GRAY or YUV clip!")
     
+    w = clip.width
+    h = clip.height
+    WH = max(w, h)
+    bd = clip.format.bits_per_sample
+    isFLOAT = clip.format.sample_type == vs.FLOAT
+    isGRAY = clip.format.color_family == vs.GRAY
+    i = 0.00392 if isFLOAT else 1 << (bd - 8)
+    mid = 0.5 if isFLOAT else 1 << (bd - 1)
+    S = core.mvsf.Super if isFLOAT else core.mv.Super
+    A = core.mvsf.Analyse if isFLOAT else core.mv.Analyse
+    C = core.mvsf.Compensate if isFLOAT else core.mv.Compensate
+    R = core.mvsf.Recalculate if isFLOAT else core.mv.Recalculate
+    D1 = core.mvsf.Degrain1 if isFLOAT else core.mv.Degrain1
+    D2 = core.mvsf.Degrain2 if isFLOAT else core.mv.Degrain2
+    D3 = core.mvsf.Degrain3 if isFLOAT else core.mv.Degrain3
+    RG = core.rgsf.RemoveGrain if isFLOAT else core.rgvs.RemoveGrain
+    rad = 3 if extraSharp else None
+    mat = [1, 2, 1, 2, 4, 2, 1, 2, 1]
+    ChromaNoise = (degrainPlane > 0)
+    hpad = meBlksz
+    vpad = meBlksz
+    
+    if meSubpel is None:
+        if WH < 960:
+            meSubpel = 4
+        elif WH < 2080:
+            meSubpel = 2
+        else:
+            meSubpel = 1
+    
+    if meBlksz is None:
+        if WH < 1280:
+            meBlksz = 8
+        elif WH < 2080:
+            meBlksz = 16
+        else:
+            meBlksz = 32
+    
+    if limitSigma is None:
+        if WH < 960:
+            limitSigma = 8
+        elif WH < 1280:
+            limitSigma = 12
+        elif WH < 2080:
+            limitSigma = 16
+        else:
+            limitSigma = 32
+    
+    if limitBlksz is None:
+        if WH < 960:
+            limitBlksz = 16
+        elif WH < 1280:
+            limitBlksz = 24
+        elif WH < 2080:
+            limitBlksz = 32
+        else:
+            limitBlksz = 64
+    
+    if postFFT <= 0:
+        postTR = 0
+    
+    if isGRAY:
+        ChromaMotion = False
+        ChromaNoise = False
+        degrainPlane = 0
+    
+    if degrainPlane == 0:
+        fPlane = [0]
+    elif degrainPlane == 1:
+        fPlane = [1]
+    elif degrainPlane == 2:
+        fPlane = [2]
+    elif degrainPlane == 3:
+        fPlane = [1, 2]
+    else:
+        fPlane = [0, 1, 2]
+
+    if postFFT == 3:
+        postTR = min(postTR, 7)
+
+    if postFFT in [1, 2]:
+        postTR = min(postTR, 2)
+
+    postTD  = postTR * 2 + 1
+    maxTR = max(degrainTR, postTR)
+    Overlap = meBlksz / 2
+    Lambda = (1000 if meTM else 100) * (meBlksz ** 2) // 64
+    LSAD = 1200 if meTM else 400
+    PNew = 50 if meTM else 25
+    PLevel = 1 if meTM else 0
+    thSAD1 = int(ppSAD1 * 64)
+    thSAD2 = int(ppSAD2 * 64)
+    thSCD1 = int(ppSCD1 * 64)
+    CMplanes = [0, 1, 2] if ChromaMotion else [0]
+    
+    if maxTR > 3 and not isFLOAT:
+        raise ValueError("TemporalDegrain2: maxTR > 3 requires input of float sample type")
+    
+    if SrchClipPP == 1:
+        spatialBlur = core.resize.Bilinear(clip, m4(w/2), m4(h/2)).std.Convolution(matrix=mat, planes=CMplanes).resize.Bilinear(w, h)
+    elif SrchClipPP > 1:
+        spatialBlur = core.tcanny.TCanny(clip, sigma=2, mode=-1, planes=CMplanes)
+        spatialBlur = core.std.Merge(spatialBlur, clip, [0.1] if ChromaMotion or isGRAY else [0.1, 0])
+    else:
+        spatialBlur = clip
+    if SrchClipPP < 3:
+        srchClip = spatialBlur
+    else:
+        expr = 'x {a} + y < x {b} + x {a} - y > x {b} - x y + 2 / ? ?'.format(a=7*i, b=2*i)
+        srchClip = core.std.Expr([spatialBlur, clip], [expr] if ChromaMotion or isGRAY else [expr, ''])
+
+    analyse_args = dict(blksize=meBlksz, overlap=Overlap, search=meAlg, searchparam=meAlgPar, pelsearch=meSubpel, truemotion=meTM, _lambda=Lambda, lsad=LSAD, pnew=PNew, plevel=PLevel, _global=GlobalMotion, dct=DCT, chroma=ChromaMotion)
+    recalculate_args = dict(blksize=Overlap, overlap=Overlap/2, search=meAlg, searchparam=meAlgPar, truemotion=meTM, _lambda=Lambda/4, pnew=PNew, dct=DCT, chroma=ChromaMotion)
+    srchSuper = S(DitherLumaRebuild(srchClip, s0=1, chroma=ChromaMotion), pel=meSubpel, sharp=1, rfilter=4, hpad=hpad, vpad=vpad, chroma=ChromaMotion)
+    
+    if (maxTR > 0) and (degrainTR < 4 or postTR < 4):
+        bVec1 = A(srchSuper, isb=True,  delta=1, **analyse_args)
+        fVec1 = A(srchSuper, isb=False, delta=1, **analyse_args)
+        if rec:
+            bVec1 = R(srchSuper, bVec1, **recalculate_args)
+            fVec1 = R(srchSuper, fVec1, **recalculate_args)
+        if maxTR > 1:
+            bVec2 = A(srchSuper, isb=True,  delta=2, **analyse_args)
+            fVec2 = A(srchSuper, isb=False, delta=2, **analyse_args)
+            if rec:
+                bVec2 = R(srchSuper, bVec2, **recalculate_args)
+                fVec2 = R(srchSuper, fVec2, **recalculate_args)
+        if maxTR > 2:
+            bVec3 = A(srchSuper, isb=True,  delta=3, **analyse_args)
+            fVec3 = A(srchSuper, isb=False, delta=3, **analyse_args)
+            if rec:
+                bVec3 = R(srchSuper, bVec3, **recalculate_args)
+                fVec3 = R(srchSuper, fVec3, **recalculate_args)
+
+    if degrainTR > 3:
+        vmulti1 = mvmulti.Analyze(srchSuper, tr=degrainTR, **analyse_args)
+        if rec:
+            vmulti1 = mvmulti.Recalculate(srchSuper, vmulti1, tr=tr, **recalculate_args)
+
+    if postTR > 3:
+        vmulti2 = mvmulti.Analyze(srchSuper, tr=postTR, **analyse_args)
+        if rec:
+            vmulti2 = mvmulti.Recalculate(srchSuper, vmulti2, tr=tr, **recalculate_args)
+    #---------------------------------------
+    # Degrain
+    # "spat" is a prefiltered clip which is used to limit the effect of the 1st MV-denoise stage.
+    if degrainTR > 0:
+        limitSigma *= i
+        s2 = limitSigma * 0.625
+        s3 = limitSigma * 0.375
+        s4 = limitSigma * 0.250
+        spat = core.fft3dfilter.FFT3DFilter(clip, planes=fPlane, sigma=limitSigma, sigma2=s2, sigma3=s3, sigma4=s4, bt=3, bw=limitBlksz, bh=limitBlksz, ncpu=fftThreads)
+        spatD  = core.std.MakeDiff(clip, spat)
+  
+    # First MV-denoising stage. Usually here's some temporal-medianfiltering going on.
+    # For simplicity, we just use MDegrain.
+    if degrainTR > 0:
+        supero = S(clip, pel=meSubpel, sharp=SubPelInterp, levels=1, rfilter=1, hpad=hpad, vpad=vpad, chroma=ChromaNoise)
+
+        if degrainTR < 2:
+            NR1 = D1(clip, supero, bVec1, fVec1, plane=degrainPlane, thsad=thSAD1, thscd1=thSCD1, thscd2=thSCD2)
+        elif degrainTR < 3:
+            NR1 = D2(clip, supero, bVec1, fVec1, bVec2, fVec2, plane=degrainPlane, thsad=thSAD1, thscd1=thSCD1, thscd2=thSCD2)
+        elif degrainTR < 4:
+            NR1 = D3(clip, supero, bVec1, fVec1, bVec2, fVec2, bVec3, fVec3, plane=degrainPlane, thsad=thSAD1, thscd1=thSCD1, thscd2=thSCD2)
+        else:
+            NR1 = mvmulti.DegrainN(clip, supero, vmulti1, tr=degrainTR, plane=degrainPlane, thsad=thSAD1, thscd1=thSCD1, thscd2=thSCD2)
+
+    # Limit NR1 to not do more than what "spat" would do.
+    if degrainTR > 0:
+        NR1D = core.std.MakeDiff(clip, NR1)
+        expr = 'x abs y abs < x y ?' if isFLOAT else 'x {} - abs y {} - abs < x y ?'.format(mid, mid)
+        DD   = core.std.Expr([spatD, NR1D], [expr])
+        NR1x = core.std.MakeDiff(clip, DD, [0])
+  
+    # Second MV-denoising stage. We use MDegrain.
+    if degrainTR > 0:
+        NR1x_super = S(NR1x, pel=meSubpel, sharp=SubPelInterp, levels=1, rfilter=1, hpad=hpad, vpad=vpad, chroma=ChromaNoise)
+
+        if degrainTR < 2:
+            NR2 = D1(NR1x, NR1x_super, bVec1, fVec1, plane=degrainPlane, thsad=thSAD2, thscd1=thSCD1, thscd2=thSCD2)
+        elif degrainTR < 3:
+            NR2 = D2(NR1x, NR1x_super, bVec1, fVec1, bVec2, fVec2, plane=degrainPlane, thsad=thSAD2, thscd1=thSCD1, thscd2=thSCD2)
+        elif degrainTR < 4:
+            NR2 = D3(NR1x, NR1x_super, bVec1, fVec1, bVec2, fVec2, bVec3, fVec3, plane=degrainPlane, thsad=thSAD2, thscd1=thSCD1, thscd2=thSCD2)
+        else:
+            NR2 = mvmulti.DegrainN(NR1x, NR1x_super, vmulti1, tr=degrainTR, plane=degrainPlane, thsad=thSAD2, thscd1=thSCD1, thscd2=thSCD2)
+    else:
+        NR2 = clip
+    
+    NR2 = RG(NR2, mode=1) # Filter to remove last bits of dancing pixels, YMMV.
+
+    #---------------------------------------
+    # post FFT
+    if postTR > 0:
+        fullSuper = S(NR2, pel=meSubpel, sharp=SubPelInterp, levels=1, rfilter=1, hpad=hpad, vpad=vpad, chroma=ChromaNoise)
+
+    if postTR > 0:
+        if postTR == 1:
+            noiseWindow = core.std.Interleave([C(NR2, fullSuper, fVec1, thscd1=thSCD1, thscd2=thSCD2), NR2,
+                                               C(NR2, fullSuper, bVec1, thscd1=thSCD1, thscd2=thSCD2)])
+        elif postTR == 2:
+            noiseWindow = core.std.Interleave([C(NR2, fullSuper, fVec2, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, fVec1, thscd1=thSCD1, thscd2=thSCD2), NR2,
+                                               C(NR2, fullSuper, bVec1, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, bVec2, thscd1=thSCD1, thscd2=thSCD2)])
+        elif postTR == 3:
+            noiseWindow = core.std.Interleave([C(NR2, fullSuper, fVec3, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, fVec2, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, fVec1, thscd1=thSCD1, thscd2=thSCD2), NR2,
+                                               C(NR2, fullSuper, bVec1, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, bVec2, thscd1=thSCD1, thscd2=thSCD2),
+                                               C(NR2, fullSuper, bVec3, thscd1=thSCD1, thscd2=thSCD2)])
+        else:
+            noiseWindow = mvmulti.Compensate(NR2, fullSuper, vmulti2, thscd1=thSCD1, thscd2=thSCD2, tr=postTR)
+    else:
+        noiseWindow = NR2
+    
+    if postFFT == 3:
+        dnWindow = core.dfttest.DFTTest(noiseWindow, sigma=postSigma*4, tbsize=postTD, planes=fPlane)
+    elif postFFT == 4:
+        dnWindow = haf.KNLMeansCL(noiseWindow, d=postTR, a=2, h=postSigma/2, device_id=knlDevId) if ChromaNoise else noiseWindow.knlm.KNLMeansCL(dnWindow, d=postTR, a=2, h=postSigma/2, device_id=knlDevId)
+    elif postFFT > 0:
+        dnWindow = core.fft3dfilter.FFT3DFilter(noiseWindow, sigma=postSigma*i, planes=fPlane, bt=postTD, ncpu=fftThreads)
+    else:
+        dnWindow = noiseWindow
+    
+    if postTR > 0:
+        dnWindow = dnWindow[postTR::postTD]
+    
+    return ContraSharpening(dnWindow, clip, rad)
+
+
 def mClean(clip, thSAD=400, chroma=True, sharp=10, rn=14, deband=0, depth=0, strength=20, outbits=None, icalc=False, rgmode=18):
     """
     From: https://forum.doom9.org/showthread.php?t=174804 by burfadel
@@ -2446,6 +2713,8 @@ def MLDegrain(clip, scale1=1.5, scale2=2, thSAD=400, tr=3, rec=False, chroma=Tru
         soft (float[]) - [small, medium, original] ranges from 0 to 1, 0 means disabled, 1 means 100% strength.
                          Do slight sharpening where motionmatch is good, do slight blurring where motionmatch is bad.
     """
+
+    isFLOAT = clip.format.sample_type == vs.FLOAT
 
     if not isinstance(clip, vs.VideoNode) or clip.format.color_family not in [vs.GRAY, vs.YUV]:
         raise TypeError('MLDegrain: This is not a GRAY or YUV clip!')
@@ -3052,7 +3321,7 @@ def HQDeringmod(clip, p=None, ringmask=None, mrad=1, msmooth=1, incedge=False, m
     planes  (int[]) - Whether to process the corresponding plane. The other planes will be passed through unchanged.
     show    (bool)  - Whether to output mask clip instead of filtered clip.
     """
-    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r30/havsfunc.py#L512
+    # Modified from havsfunc: https://github.com/HomeOfVapourSynthEvolution/havsfunc/blob/r31/havsfunc.py#L703
 
     bd = min(clip.format.bits_per_sample, 16)
     isFLOAT = clip.format.sample_type == vs.FLOAT
@@ -3275,349 +3544,6 @@ def LUSM(clip, blur=1, thr=3.0, elast=4.0, brighthr=None):
     return mvf.LimitFilter(sharp, clip, thr=thr, elast=elast, brighten_thr=brighthr)
 
 
-def MedSharp(clip, sstr=1.5, rad=1, mode=1, thr=256, lp=False, hp=False, nr=False):
-    """
-    From: https://forum.doom9.org/showthread.php?t=153201
-    Soft thresholded median sharpening function by *.mp4 guy
-    
-    Args:
-        sstr (float) - strength of median sharpening.
-        rad   (int)  - radius of median. must be 1 or 2.
-        mode  (int)  - mode 0 uses 4 points (Up, Down, Left, Right).
-                       mode 1 uses 5 points (mode 0 + Center value).
-                       mode 2 uses 8 points including the diagonals but not the center.
-        lp   (bool)  - do a low-pass filtering before sharpening.
-        hp   (bool)  - do a high-pass on the sharp-difference.
-        nr   (bool)  - do an additional noise-reduction before sharpening.
-    """
-    
-    if not isinstance(clip, vs.VideoNode) or clip.format.color_family != vs.YUV or clip.format.bits_per_sample != 8:
-        raise TypeError("MedSharp: This is not a 8-bit YUV clip!")
-    
-    if rad not in [1, 2]:
-        raise ValueError("MedSharp: rad must be 1 or 2")
-
-    if mode not in [0, 1, 2]:
-        raise ValueError("MedSharp: mode must be 0, 1 or 2")
-    
-    lowpass = clip
-    thr = max(thr, 0)
-    rad2 = round(rad / math.sqrt(2))
-    lowpass = NLL(NLL(lowpass, 'v', 1, True), 'h', 1, True) if lp else lowpass
-    lowpass = TMed2(lowpass, thr=thr, rad=rad, mode=mode) if nr else lowpass
-    thr = math.sqrt(thr) if thr > 1 else thr
-    expr = 'x y - dup dup dup abs 1 + * swap abs {thr} + / - 128 +'.format(thr=thr)
-
-    if mode == 0:
-        Diff = clip.avs.mt_luts(lowpass, mode='med', pixels='0 {r} {r} 0 -{r} 0 0 -{r}'.format(r=rad), expr=expr, U=1, V=1)
-    elif mode == 1:
-        Diff = clip.avs.mt_luts(lowpass, mode='med', pixels='0 {r} {r} 0 -{r} 0 0 -{r} 0 0'.format(r=rad), expr=expr, U=1, V=1)
-    else:
-        Diff = clip.avs.mt_luts(lowpass, mode='med', pixels='-{r2} -{r2} -{r2} {r2} {r2} -{r2} {r2} {r2} 0 {r} {r} 0 -{r} 0 0 -{r}'.format(r=rad, r2=rad2), expr=expr, U=1, V=1)
-    
-    Diff = core.std.Expr([Diff], ['x 128 - {} * 128 +'.format(sstr), ''])
-
-    if hp:
-        Diff2 = NLL(NLL(Diff, 'v', rad, True), 'h', rad, True)
-        Diff = core.std.MakeDiff(Diff, Diff2, planes=[0])
-    
-    sharp = core.std.MergeDiff(clip, Diff, planes=[0])
-    
-    return core.std.ShufflePlanes([sharp, clip], [0, 1, 2], vs.YUV)
-
-
-def MedSharp2(clip, sstr=1, rad=1, thr=256, lp=False):
-    """
-    From: https://forum.doom9.org/showthread.php?t=153201
-    Soft thresholded median sharpening function by *.mp4 guy
-    *.mp4 guy: This predates ReCon which I consider to be generally better.
-
-    Args:
-        sstr (float) - strength of median sharpening.
-        rad   (int)  - radius of median. must be 1 or 2.
-        lp   (bool)  - do a lowpass filtering before sharpening.
-    """
-    
-    if not isinstance(clip, vs.VideoNode) or clip.format.color_family != vs.YUV or clip.format.bits_per_sample != 8:
-        raise TypeError("MedSharp2: This is not a 8-bit YUV clip!")
-
-    if rad not in [1, 2]:
-        raise ValueError("MedSharp2: rad must be 1 or 2")
-    
-    rad2 = round(rad / math.sqrt(2))
-    Lowpass_Return = NLL(NLL(clip, 'v', 1, True), 'h', 1, True) if lp else clip
-    blank = core.std.BlankClip(clip, color=[87, 128, 128])
-    Lowpass_NR_1 = TMed2(Lowpass_Return, rad=rad, thr=thr, mode=1)
-    Lowpass_NR_2 = TMed2(Lowpass_Return, rad=rad, thr=thr/4, mode=2)
-    thr = math.sqrt(max(thr, 0)) if thr > 1 else thr
-    thr2 = math.sqrt(thr*2) if thr > 0.5 else thr*2
-    Diff1 = clip.avs.mt_luts(Lowpass_NR_1, mode="med", pixels="0 {r} {r} 0 -{r} 0 0 -{r} 0 0".format(r=rad), expr="x y - dup dup dup abs 1 + * swap abs {thr} + / - 128 +".format(thr=thr), U=1, V=1)
-    Diff2 = clip.avs.mt_luts(Lowpass_NR_2, mode="med", pixels="-{r2} -{r2} -{r2} {r2} {r2} -{r2} {r2} {r2} 0 {r} {r} 0 -{r} 0 0 -{r}".format(r=rad, r2=rad2) , expr="x y - dup dup dup abs 1 + * swap abs {thr2} + / - 128 +".format(thr2=thr2), U=1, V=1)        
-    mask1 = core.std.Expr([Diff1], ['x 128 - 255 *', ''])
-    s1 = core.std.Expr([core.std.MaskedMerge(Diff2, blank, mask1, planes=[0])], ['x 128 - {} * 128 +'.format(sstr/2), ''])
-    s1b = NLL(NLL(s1, 'v', 1, True), 'h', 1, True)
-    s1s = core.std.MakeDiff(s1, s1b, planes=[0])
-    s2 = core.std.Expr([Diff1], ['x 128 - {} * 128 +'.format(sstr), ''])
-    s2b = NLL(NLL(s2, 'v', 1, True), 'h', 1, True)
-    s2s = core.std.MakeDiff(s2, s2b, planes=[0])
-    out = core.std.MergeDiff(clip, s1s, planes=[0])
-    out = core.std.MergeDiff(out, s2s, planes=[0])
-
-    return core.std.ShufflePlanes([out, clip], [0, 1, 2], vs.YUV)
-
-
-def blah(clip, sstr=4, de=0.2, re=0.1, cstr=0.5, thr=72):
-    """
-    From: https://forum.doom9.org/showthread.php?t=155030
-    A sharpening function by *.mp4 guy
-    Defaults are intended for strong sharpening on 2x upscaled material. For normal sharpening, 
-    set de to 0.02, sstr to 3 and cstr to 0.75 and go from there. The failure modes are as 
-    graceful as I can reasonably get them, considering the strength of the sharpening required. 
-    Also, the degree of sharpening that can be "gotten away with" varies pretty wildly by source.
-
-    Args:
-        sstr (float) - strength of highpass sharpening.
-        de   (float) - de-emphasis strength.
-        re   (float) - re-emphasis strength.
-        cstr (float) - strength of contrast sharpening, values above 1 will cause halos.
-    """
-
-    if not isinstance(clip, vs.VideoNode) or clip.format.color_family != vs.YUV or clip.format.bits_per_sample != 8:
-        raise TypeError("blah: This is not a 8-bit YUV clip!")
-        
-    if de <= 0 or re <= 0:
-        raise ValueError("blah: de and re must be strictly postive")
-    
-    de = min(20 / de, 1023)
-    matd = [1, 6, 15, 15, 6, 1]
-    matd.insert(3, de)
-    re = max(20 / -re, -1023)
-    matr = [1, 6, 15, 15, 6, 1]
-    matr.insert(3, re)
-    sstr = math.sqrt(max(sstr, 0)) if sstr > 1 else sstr
-    thr = math.sqrt(max(thr, 0)) if thr > 1 else thr
-    thr2 = 1/thr if thr > 1 else 1/math.sqrt(thr)
-    lp_V = NLL(clip, 'v')
-    Diff_V = core.std.MakeDiff(clip, lp_V)
-    lp_H = NLL(lp_V, 'h')
-    Diff_H = core.std.MakeDiff(lp_V, lp_H)
-    DeEmphasis = muf.YAHRmod(muf.YAHRmod(lp_H)).std.Convolution(matrix=matd, mode='h', planes=[0]).std.Convolution(matrix=matd, mode='v', planes=[0])
-    expr1 = 'x y - dup dup dup abs 1 + * swap abs {} + / - 128 +'.format(sstr)
-    expr2 = 'x 128 - abs y 128 - abs > x y ? 128 - abs'
-    expr3 = 'x 128 - abs y 128 - abs > y x ? 128 - abs'
-    Max_V = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0', expr=expr1, U=1, V=1)
-    Min_V = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0', expr=expr1, U=1, V=1)
-    MinMax_High_V = core.std.Expr([Max_V, Min_V], expr=[expr2, ''])
-    MinMax_Low_V = core.std.Expr([Max_V, Min_V], expr=[expr3, ''])
-    minmax_UL_V = core.std.Expr([MinMax_Low_V, MinMax_High_V], expr=['x y x - -', ''])
-    minmax_G_V = core.misc.AverageFrames([MinMax_High_V, MinMax_Low_V, minmax_UL_V], [2, 7, 11], planes=[0])
-    Max_H = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1', expr=expr1, U=1, V=1)
-    Min_H = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1', expr=expr1, U=1, V=1)
-    MinMax_High_H = core.std.Expr([Max_H, Min_H], expr=[expr2, ''])
-    MinMax_Low_H = core.std.Expr([Max_H, Min_H], expr=[expr3, ''])
-    minmax_UL_H = core.std.Expr([MinMax_Low_H, MinMax_High_H], expr=['x y x - -', ''])
-    minmax_G_H = core.misc.AverageFrames([MinMax_High_H, MinMax_Low_H, minmax_UL_H], [2, 7, 11], planes=[0])
-    expr4 = 'x 128 - y 1 > y 1 ? * y x 128 - abs - 1 > y x 128 - abs - 1 ? / 128 +'
-    Diff_V = core.std.Expr([Diff_V, minmax_G_V], expr=[expr4, ''])
-    Diff_H = core.std.Expr([Diff_H, minmax_G_H], expr=[expr4, ''])
-    Diff_HV = core.std.MergeDiff(Diff_H, Diff_V)
-    HPSharp = core.std.MergeDiff(DeEmphasis, Diff_HV)
-    ReEmphasis = HPSharp.std.Convolution(matrix=matr, mode='h', planes=[0]).std.Convolution(matrix=matr, mode='v', planes=[0])
-    expr5 = 'x y - dup dup dup abs 1 + * swap abs {} + / - 128 +'.format(thr)
-    expr6 = 'x 128 - y * {} * {} * 128 +'.format(thr2, cstr)
-    V = ReEmphasis.avs.mt_luts(ReEmphasis, mode='med', pixels='0 0 0 1 0 -1 0 2 0 -2', expr=expr5, U=1, V=1)
-    V = core.std.Expr(V, ['x 128 - abs', ''])
-    H = ReEmphasis.avs.mt_luts(ReEmphasis, mode='med', pixels='0 0 1 0 -1 0 2 0 -2 0', expr=expr5, U=1, V=1)
-    H = core.std.Expr(H, ['x 128 - abs', ''])
-    Gauss_V = core.std.MakeDiff(ReEmphasis, ReEmphasis.std.Convolution(matrix=[1, 6, 15, 20, 15, 6, 1], mode='v', planes=[0]))
-    Gauss_V = core.std.Expr([Gauss_V, V], expr=[expr6, ''])
-    Gauss_H = core.std.MakeDiff(ReEmphasis, ReEmphasis.std.Convolution(matrix=[1, 6, 15, 20, 15, 6, 1], mode='h', planes=[0]))
-    Gauss_H = core.std.Expr([Gauss_H, H], expr=[expr6, ''])
-    Gauss_VH = core.std.MergeDiff(Gauss_V, Gauss_H)
-    contrast = core.std.MergeDiff(ReEmphasis, Gauss_VH)
-
-    return core.std.ShufflePlanes([contrast, clip], [0, 1, 2], vs.YUV)
-
-
-def Recon(clip, sstr=4, rad=2, lmode=1, thr=720):
-    """
-    From: https://forum.doom9.org/showthread.php?t=155030 by *.mp4 guy
-    Reconvolution - makes things sharp by mixing pixels together.
-    
-    Args:
-        sstr (float) - strength of sharpening
-        rad  (float) - radius of sharpening
-        lmode (int)  - limit mode, 0 (strong limiting) to 4 (unlimited)
-    """
-
-    if not isinstance(clip, vs.VideoNode) or clip.format.color_family != vs.YUV or clip.format.bits_per_sample != 8:
-        raise TypeError("Recon: This is not a 8-bit YUV clip!")
-        
-    if rad not in [0.5, 1, 1.5, 2, 2.5, 3, 4]:
-        raise ValueError("Recon: wrong rad value!")
-        
-    if lmode not in [0, 1, 2, 3, 4]:
-        raise ValueError("Recon: wrong lmode value!")
-    
-    thr = math.sqrt(max(thr, 0)) if thr > 1 else thr
-    thr2 = 1/thr if thr > 1 else 1/math.sqrt(thr)
-    expr1 = 'x y - dup dup dup abs 1 + * swap abs {} + / - 128 +'.format(thr)
-    expr2 = 'x 128 - abs y 128 - abs > x y ? 128 - abs'
-    expr3 = 'x 128 - abs y 128 - abs > y x ? 128 - abs'
-    
-    if rad == 0.5:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6', expr=expr1, U=1, V=1)
-    else:
-        Max_V = clip.avs.mt_luts(clip, mode='max', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8', expr=expr1, U=1, V=1)
-            
-    if rad == 0.5:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6', expr=expr1, U=1, V=1)
-    else:
-        Min_V = clip.avs.mt_luts(clip, mode='min', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8', expr=expr1, U=1, V=1)
-
-    if rad == 0.5:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6', expr=expr1, U=1, V=1)
-    else:
-        Med_V = clip.avs.mt_luts(clip, mode='med', pixels='0 1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8', expr=expr1, U=1, V=1)
-        
-    Med_V = core.std.Expr(Med_V, 'x 128 - abs')
-            
-    MinMax_High_V = core.std.Expr([Max_V, Min_V], expr=[expr2, ''])
-    MinMax_Low_V = core.std.Expr([Max_V, Min_V], expr=[expr3, ''])
-    minmax_UL_V = core.std.Expr([MinMax_Low_V, MinMax_High_V], expr=['x y x - -', ''])
-    minmaxmed_v = core.misc.AverageFrames([MinMax_High_V, MinMax_Low_V, minmax_UL_V, Med_V], [2, 8, 11, 11], planes=[0])
-
-    if rad == 0.5:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0', expr=expr1, U=1, V=1)
-    else:
-        Max_H = clip.avs.mt_luts(clip, mode='max', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8 0', expr=expr1, U=1, V=1)
-            
-    if rad == 0.5:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0', expr=expr1, U=1, V=1)
-    else:
-        Min_H = clip.avs.mt_luts(clip, mode='min', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8 0', expr=expr1, U=1, V=1)
-                    
-    if rad == 0.5:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0', expr=expr1, U=1, V=1)
-    elif rad == 1:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0', expr=expr1, U=1, V=1)
-    elif rad == 1.5:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0', expr=expr1, U=1, V=1)
-    elif rad == 2:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0', expr=expr1, U=1, V=1)
-    elif rad == 2.5:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0', expr=expr1, U=1, V=1)
-    elif rad == 3:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0', expr=expr1, U=1, V=1)
-    else:
-        Med_H = clip.avs.mt_luts(clip, mode='med', pixels='1 0 -1 0 2 0 -2 0 3 0 -3 0 4 0 -4 0 5 0 -5 0 6 0 -6 0 7 0 -7 0 8 0 -8 0', expr=expr1, U=1, V=1)
-
-    Med_H = core.std.Expr(Med_H, "x 128 - abs")
-
-    MinMax_High_H = core.std.Expr([Max_H, Min_H], expr=[expr2, ''])
-    MinMax_Low_H = core.std.Expr([Max_H, Min_H], expr=[expr3, ''])
-    minmax_UL_H = core.std.Expr([MinMax_Low_H, MinMax_High_H], expr=['x y x - -', ''])
-    minmaxmed_h = core.misc.AverageFrames([MinMax_High_H, MinMax_Low_H, minmax_UL_H, Med_H], [2, 8, 11, 11], planes=[0])
-
-    if rad == 1:
-        Blur_V = NLL(clip, 'v', 1)
-    elif 1 < rad <= 2:
-        Blur_V = NLL(clip, 'v', 2)
-    elif 2 < rad <= 3:
-        Blur_V = NLL(clip, 'v', 3)
-    else:
-        Blur_V = NLL(clip, 'v', 4)
-                
-    Sharp_Diff_V = core.std.MakeDiff(clip, Blur_V)
-
-    if lmode == 0:
-        Sharp_V = core.std.Expr([Sharp_Diff_V, minmaxmed_v], expr=['x 128 - y * {} * {} * 128 +'.format(thr2, sstr), ''])
-    elif lmode == 1:
-        Sharp_V = core.std.Expr([Sharp_Diff_V, minmaxmed_v], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + x 128 - y sqrt * {t2} sqrt * {s} * 128 + ?'.format(t2=thr2, s=sstr), ''])
-    elif lmode == 2:
-        Sharp_V = core.std.Expr([Sharp_Diff_V, minmaxmed_v], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + y 0 > x 128 - {s} * 128 + 128 ? ?'.format(t2=thr2, s=sstr), ''])
-    elif lmode == 3:
-        Sharp_V = core.std.Expr([Sharp_Diff_V, minmaxmed_v], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + x 128 - {s} * 128 + ?'.format(t2=thr2, s=sstr), ''])
-    else:
-        Sharp_V = core.std.Expr([Sharp_Diff_V, minmaxmed_v], expr=['x 128 - {} * 128 +'.format(sstr), ''])
-    
-    if rad == 1:
-        Blur_H = NLL(clip, 'h', 1)
-    elif 1 < rad <= 2:
-        Blur_H = NLL(clip, 'h', 2)
-    elif 2 < rad <= 3:
-        Blur_H = NLL(clip, 'h', 3)
-    else:
-        Blur_H = NLL(clip, 'h', 4)
-                
-    Sharp_Diff_H = core.std.MakeDiff(clip, Blur_H)
-
-    if lmode == 0:
-        Sharp_H = core.std.Expr([Sharp_Diff_H, minmaxmed_h], expr=['x 128 - y * {} * {} * 128 +'.format(thr2, sstr), ''])
-    elif lmode == 1:
-        Sharp_H = core.std.Expr([Sharp_Diff_H, minmaxmed_h], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + x 128 - y sqrt * {t2} sqrt * {s} * 128 + ?'.format(t2=thr2, s=sstr), ''])
-    elif lmode == 2:
-        Sharp_H = core.std.Expr([Sharp_Diff_H, minmaxmed_h], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + y 0 > x 128 - {s} * 128 + 128 ? ?'.format(t2=thr2, s=sstr), ''])	
-    elif lmode == 3:
-        Sharp_H = core.std.Expr([Sharp_Diff_H, minmaxmed_h], expr=['x 128 - abs y > x 128 - y * {t2} * {s} * 128 + x 128 - {s} * 128 + ?'.format(t2=thr2, s=sstr), ''])
-    else:
-        Sharp_H = core.std.Expr([Sharp_Diff_H, minmaxmed_h], expr=['x 128 - {} * 128 +'.format(sstr), ''])
-                    
-    Sharp_VH = core.std.MergeDiff(Sharp_V, Sharp_H)
-    sharpened = core.std.MergeDiff(clip, Sharp_VH)
-    
-    return core.std.ShufflePlanes([sharpened, clip], [0, 1, 2], vs.YUV)
-
 ### Utility functions below
 def Overlay(c1, c2, mask=None, opacity=1.0, mode='blend'):
     # Simplified Overlay(), does not perform any checking or fitting.
@@ -3731,7 +3657,7 @@ def ContraSharpening(clip, src, radius=None, rep=13, planes=[0, 1, 2]):
     return core.std.MergeDiff(clip, ssDD, planes) # apply the limited difference (sharpening is just inverse blurring)
 
 
-def MinBlur(clip, r=1, planes=[0, 1, 2]):
+def MinBlur(clip, rad=1, planes=[0, 1, 2]):
     # MinBlur by Didée (https://avisynth.nl/index.php/MinBlur)
     # Nifty Gauss/Median combination
 
@@ -3752,13 +3678,13 @@ def MinBlur(clip, r=1, planes=[0, 1, 2]):
     bd = clip.format.bits_per_sample
     isFLOAT = clip.format.sample_type == vs.FLOAT
 
-    if r <= 0:
+    if rad <= 0:
         RG11 = sbr(clip, 1, planes)
         RG4 = core.std.Median(clip, planes)
-    elif r == 1:
+    elif rad == 1:
         RG11 = core.std.Convolution(clip, matrix=mat1, planes=planes)
         RG4 = core.std.Median(clip, planes)
-    elif r == 2:
+    elif rad == 2:
         RG11 = core.std.Convolution(clip, matrix=mat1, planes=planes).std.Convolution(matrix=mat2, planes=planes)
         RG4 = core.ctmf.CTMF(clip.fmtc.bitdepth(bits=16), radius=2, planes=planes).fmtc.bitdepth(flt=1) if isFLOAT else core.ctmf.CTMF(clip, radius=2, planes=planes)
     else:
@@ -3947,46 +3873,3 @@ def scale(value, peak):
 # mod-4 and at least 16 function
 def m4(x):
     return 16 if x < 16 else int(x / 4 + 0.5) * 4
-
-def Blur(Center, mode, rad=1, CW=0.5):
-    expr = 'x {w1} * y {w2} * + z {w2} * +'.format(w1=CW, w2=0.5-CW/2)
-    
-    if mode == 'h':
-        Left  = core.resize.Point(clip, src_left=-rad)
-        Right = core.resize.Point(clip, src_left=rad)
-        return core.std.Expr([Center, Left, Right], [expr, ''])
-    
-    if mode == 'v':
-        Down = core.resize.Point(clip, src_top=-rad)
-        Up   = core.resize.Point(clip, src_top=rad)
-        return core.std.Expr([Center, Down, Up], [expr, ''])
-
-def NLL(clip, mode, rad=1, med=None):
-    B1 = Blur(clip, mode, 1*rad, 0.44)
-    B2 = Blur(clip, mode, 3*rad, 0.83) if med else Blur(clip, mode, 2*rad, 0.83)
-    B3 = Blur(clip, mode, 5*rad, 0.93) if med else Blur(clip, mode, 3*rad, 0.93)
-    B4 = Blur(clip, mode, 7*rad, 0.98) if med else Blur(clip, mode, 4*rad, 0.98)
-    B1_D = core.std.MakeDiff(B1, clip, [0])
-    B2_D = core.std.MakeDiff(clip, B2, [0])
-    B3_D = core.std.MakeDiff(B3, clip, [0])
-    B4_D = core.std.MakeDiff(clip, B4, [0])
-    expr = 'x 128 - y 128 - x 128 - abs y 128 - abs * 1 + * x 128 - abs y 128 - abs * y 128 - abs {v} * x 128 - abs - 0 > y 128 - abs {v} * x 128 - abs - 0 ? x 128 - abs 0 > x 128 - abs -1 x 128 - abs 0 > x 128 - 1 ? / pow 1 ? / 1 * + 1 + / + 128 +'
-    B2_DT = core.std.Expr([B1_D,  B2_D], [expr.format(v=1.915), ''])
-    B3_DT = core.std.Expr([B2_DT, B3_D], [expr.format(v=2.025), ''])
-    B4_DT = core.std.Expr([B3_DT, B4_D], [expr.format(v=2.077), ''])
-
-    return core.std.MergeDiff(B4_DT, clip, [0])
-
-def TMed2(clip, thr=256, rad=1, mode=1):
-    thr = math.sqrt(max(thr, 0)) if thr > 1 else thr
-    rad2 = round(rad / math.sqrt(2))
-    expr = 'x y - dup dup dup abs 1 + * swap abs {} + / - 128 +'.format(thr)
-
-    if mode == 0:
-        Diff = clip.avs.mt_luts(clip, mode='med', pixels='0 {r} {r} 0 -{r} 0 0 -{r}'.format(r=rad), expr=expr, U=1, V=1)
-    elif mode == 1:
-        Diff = clip.avs.mt_luts(clip, mode='med', pixels='0 {r} {r} 0 -{r} 0 0 -{r} 0 0'.format(r=rad), expr=expr, U=1, V=1)
-    else:
-        Diff = clip.avs.mt_luts(clip, mode='med', pixels='-{r2} -{r2} -{r2} {r2} {r2} -{r2} {r2} {r2} 0 {r} {r} 0 -{r} 0 0 -{r}'.format(r=rad, r2=rad2), expr=expr, U=1, V=1)
-
-    return core.std.MakeDiff(clip, Diff, [0])

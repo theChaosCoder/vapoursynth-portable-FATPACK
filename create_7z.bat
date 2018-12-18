@@ -1,0 +1,1 @@
+VapourSynth64Portable\VapourSynth64\7z.exe a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=512m -mt=off -ms=off destination.7z Source
