@@ -22,7 +22,7 @@ $output_mveditor = "$PSScriptRoot\mveditor.zip"
 $output_wobbly   = "$PSScriptRoot\wobbly.7z"
 $output_d2vwitch = "$PSScriptRoot\d2vwitch.7z"
 
-$url_python   = "https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-amd64.zip"
+$url_python   = "https://www.python.org/ftp/python/3.7.2/python-3.7.2.post1-embed-amd64.zip"
 $url_vs       = "https://github.com/vapoursynth/vapoursynth/releases/download/R45/VapourSynth64-Portable-R45.7z"
 $url_pip      = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r18-64bit.7z"
@@ -33,12 +33,11 @@ $url_d2vwitch = "https://github.com/dubhater/D2VWitch/releases/download/v2/D2VWi
 
 function dl([string]$url, [string]$file, [string]$name)
 {
-    $out = $file
-    if (-NOT (Test-Path $out)) {
+    if (-NOT (Test-Path $file)) {
         Write-Output "Download $name $url"
-        Invoke-WebRequest -Uri $url -OutFile $out
+        Invoke-WebRequest -Uri $url -OutFile $file
     } else {
-        Write-Output "File exists, skipping Download $url"
+        Write-Output "File exists, skipping download of $url"
     }
 }
 
