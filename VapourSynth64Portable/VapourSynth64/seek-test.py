@@ -17,7 +17,7 @@ import vapoursynth as vs
 import argparse
 import sys, os, hashlib, random
 
-choices_filter = ['ffms2', 'lsmas', 'd2v', 'avi']
+choices_filter = ['ffms2', 'lsmas', 'd2v', 'avi', 'ffms2seek0']
 
 parser = argparse.ArgumentParser(description='Reliability tester of VapourSynth Source Filters - seek test')
 parser.add_argument('file', help='Video file to perform a seek test on')
@@ -37,6 +37,7 @@ if args.source_filter is None:
     print("      2 for L-SMASH-Works")
     print("      3 for D2V Source")
     print("      4 for AVISource")
+    print("      5 for FFMS2000(seekmode=0) [slow but more safe]")
     user_choice = int(input("Number: "))
     if(1 <= user_choice <= len(choices_filter)):
         args.source_filter = choices_filter[user_choice-1]
@@ -45,6 +46,8 @@ if args.source_filter is None:
 	
 if(args.source_filter == "ffms2"):
 	clip = c.ffms2.Source(args.file)
+if(args.source_filter == "ffms2seek0"):
+	clip = c.ffms2.Source(args.file, seekmode=0)
 if(args.source_filter == "lsmas"):
 	clip = c.lsmas.LWLibavSource(args.file)
 if(args.source_filter == "d2v"):
