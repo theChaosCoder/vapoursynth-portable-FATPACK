@@ -63,7 +63,7 @@ Write-Output ""
 Write-Output "Extract files..."
 ###Expand-Archive -Path $output_python -DestinationPath "$PSScriptRoot\$vsfolder" -Force
 .\7z.exe x $output_python -y
-.\7z.exe e $output_vseditor -y
+.\7z.exe x $output_vseditor -y
 .\7z.exe x $output_vs -y
 .\7z.exe x $output_mveditor -y
 .\7z.exe x $output_wobbly -y
@@ -76,13 +76,18 @@ Write-Output ""
 Write-Output "Download / install python packages via pip..."
 .\python.exe get-pip.py
 .\python.exe -m pip install tqdm --no-warn-script-location
-.\python.exe -m pip install yuuno --no-warn-script-location
+.\python.exe -m pip install numpy --no-warn-script-location
+###.\python.exe -m pip install yuuno --no-warn-script-location
 #.\python.exe -m yuuno.console_scripts jupyter install --no-warn-script-location
 
 
-Write-Output "/!\"
-Write-Output "/!\ TODO: Implement replacing string !c:\mypath\python.exe to !python.exe in Scripts\*.exe. You need to do it yourself."
-Write-Output "/!\"
+$vsfolder_full_lower = "$vsfolder_full".ToLower()
+Write-Output ""
+Write-Output "Replacing string #!C:\mypath\python.exe to #!python.exe for Scripts\*.exe"
+Get-ChildItem "$vsfolder_full_lower\Scripts\*.exe" -Recurse | ForEach {
+	(Get-Content -Raw $_ | ForEach  { $_.Replace("#!$vsfolder_full_lower\", "#!") }) |
+	Set-Content -NoNewline $_
+}
 
 
 Write-Output ""
@@ -95,5 +100,8 @@ Remove-Item –path vapoursynth64\plugins\.keep
 
 Write-Output ""
 Write-Output "fin"
+Write-Output "(/¯0 - 0)/¯  You're almost done master builder"
+Write-Output ""
 Write-Output "MANUAL TASK: copy x264.exe, x265.exe to bin and all plugins into the plugins folder"
+Write-Output ""
 pause

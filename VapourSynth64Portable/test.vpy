@@ -1,10 +1,11 @@
 import sys, os
 import functools
-from vapoursynth import core
+import vapoursynth as vs
 
 import mvsfunc as mvf
 import havsfunc as haf
 
+core = vs.get_core()
 
 time = 2.0
 
