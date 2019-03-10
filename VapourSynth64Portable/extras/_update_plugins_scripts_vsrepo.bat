@@ -1,5 +1,5 @@
 @ECHO OFF
-set path=VapourSynth64
+set path=..\VapourSynth64
 
 echo Updating via vsrepo, more infos here: https://forum.doom9.org/showthread.php?t=175590
 echo.
