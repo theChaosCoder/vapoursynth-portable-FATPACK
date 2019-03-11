@@ -2,11 +2,13 @@
 
 #### 2019-not-released-yet
 - Add getnative (get the native resolution(s) of upscaled material)
+- Add AviSynth autoload script
+- Add AviSynth support
 
 #### 2019-03-10
-- Add Butteraugli, FFTSpectrum
+- Add Butteraugli, FFTSpectrum, vsutil
 - Update to latest git muvsfunc, mvtools with bugfixes (https://github.com/dubhater/vapoursynth-mvtools/issues/36#issuecomment-462856029)
-- Update Retinex, FFMS2 (thx @Wolfberry https://forum.doom9.org/showthread.php?p=1867896#post1867896), fmtconv (compiled by Wolfberry)
+- Update Retinex, kagefunc, FFMS2 (thx @Wolfberry https://forum.doom9.org/showthread.php?p=1867896#post1867896), fmtconv (compiled by Wolfberry)
 - Update python to 3.7.2
 - Update fftw3 to 3.3.8, thx @Wolfberry - https://forum.doom9.org/showthread.php?p=1864138#post1864138
 - Add VFW "install" script, so that VDub and co can read vpy files
