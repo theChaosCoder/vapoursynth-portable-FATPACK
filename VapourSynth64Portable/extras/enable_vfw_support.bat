@@ -1,13 +1,20 @@
 @echo off
+echo.
+echo ----------------------------------------------------
+echo Enables VFW support for VapourSynth Portable FATPACK
+echo ----------------------------------------------------
+echo.
 
 ::goto :install
 fsutil dirty query %systemdrive% > nul
 if errorlevel 1 goto :noAdmin
 
 :: check for a vs installation
-reg query "HKEY_LOCAL_MACHINE\SOFTWARE\VapourSynth" > nul
-if errorlevel 0 goto :vsfound
-if errorlevel 1 goto :install
+reg query "HKEY_LOCAL_MACHINE\SOFTWARE\VapourSynth" > nul 2>&1
+::echo err: %errorlevel%
+if errorlevel 1 ( goto :install )
+if errorlevel 0 ( goto :vsfound )
+::if errorlevel 1 goto :install
 
 :vsfound
 echo.
@@ -35,13 +42,10 @@ echo.
 echo Adding RegKeys
 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{58F74CA0-BD0E-4664-A49B-8D10E6F0C131}" /v "" /d "VapourSynth" /f
-if errorlevel 1 goto :error
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{58F74CA0-BD0E-4664-A49B-8D10E6F0C131}\InProcServer32" /v "" /d "%vsvfw%" /f
-if errorlevel 1 goto :error
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{58F74CA0-BD0E-4664-A49B-8D10E6F0C131}\InProcServer32" /v "ThreadingModel" /d "Apartment" /f
-if errorlevel 1 goto :error
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\AVIFile\Extensions\VPY" /v "" /d "{58F74CA0-BD0E-4664-A49B-8D10E6F0C131}" /f
-if errorlevel 1 goto :error
+
 echo.
 echo done
 goto :nomatrix
