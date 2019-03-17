@@ -21,8 +21,8 @@ choices_filter = ['ffms2', 'lsmas', 'd2v', 'avi', 'ffms2seek0']
 
 parser = argparse.ArgumentParser(description='Reliability tester of VapourSynth Source Filters - seek test')
 parser.add_argument('file', help='Video file to perform a seek test on')
-parser.add_argument('start', nargs='?', type=int, default='0', help='Start frame') 
-parser.add_argument('end', nargs='?', type=int, help='End frame')
+parser.add_argument('start_frame', nargs='?', type=int, default='0', help='Start frame') 
+parser.add_argument('end_frame', nargs='?', type=int, help='End frame')
 parser.add_argument('-f', choices=choices_filter, dest='source_filter', help='Set source filter')
 args = parser.parse_args()
 
@@ -58,15 +58,18 @@ if(args.source_filter == "avi"):
 print(args.source_filter)
 
 
-start = 0
-end = clip.num_frames - 1
-if not args.end is None and args.end > 0:
-    start = int(args.start)
-    end = int(args.end)
-
-clip = c.std.Trim(clip, start, end)
+start_frame = 0
+end_frame = clip.num_frames - 1
+if not args.end_frame is None and args.end_frame > 0:
+    start_frame = int(args.start_frame)
+    end_frame = int(args.end_frame)
 
 print("Clip has {} frames.".format(clip.num_frames))
+if clip.num_frames < end_frame:
+	end_frame = clip.num_frames - 1
+	#print("[INFO] End Frame parameter exceeds clip length, correcting end_frame to clip length.")
+	
+clip = c.std.Trim(clip, start_frame, end_frame)
 
 def hash_frame(frame):
     md5 = hashlib.md5()
@@ -81,7 +84,7 @@ for i in range(clip.num_frames):
     reference.append(hash_frame(clip.get_frame(i)))
 
     if i % 100 == 0:
-        print("Hashing: {}%".format(i * 100 // (clip.num_frames - 1)), end='\r')
+        print("Hashing: {}%".format(i * 100 // (end_frame)), end='\r')
 
 print("\nClip hashed.\n")
 
@@ -116,6 +119,8 @@ for i in test:
 
 if not hasError:
     print("Test complete. No seeking issues found :D")
+    sys.exit(0)
 else:
     print("")
     print("Test complete. Seeking issues found :-(")
+    sys.exit(1)
