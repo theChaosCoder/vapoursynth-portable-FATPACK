@@ -84,7 +84,7 @@ for i in range(clip.num_frames):
     reference.append(hash_frame(clip.get_frame(i)))
 
     if i % 100 == 0:
-        print("Hashing: {}%".format(i * 100 // (end_frame)), end='\r')
+        print("Hashing: {}%".format(i * 100 // (clip.num_frames - 1)), end='\r')
 
 print("\nClip hashed.\n")
 
