@@ -28,7 +28,7 @@ $url_pip      = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
 $url_mveditor = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly   = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
-$url_d2vwitch = "https://github.com/dubhater/D2VWitch/releases/download/v2/D2VWitch-v2-win64.7z"
+$url_d2vwitch = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
 
 
 function dl([string]$url, [string]$file, [string]$name)
