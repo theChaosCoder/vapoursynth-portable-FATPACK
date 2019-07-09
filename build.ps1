@@ -22,7 +22,7 @@ $output_mveditor = "$PSScriptRoot\mveditor.zip"
 $output_wobbly   = "$PSScriptRoot\wobbly.7z"
 $output_d2vwitch = "$PSScriptRoot\d2vwitch.7z"
 
-$url_python   = "https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-amd64.zip"
+$url_python   = "https://www.python.org/ftp/python/3.7.4/python-3.7.4-embed-amd64.zip"
 $url_vs       = "https://github.com/vapoursynth/vapoursynth/releases/download/R46/VapourSynth64-Portable-R46.7z"
 $url_pip      = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
