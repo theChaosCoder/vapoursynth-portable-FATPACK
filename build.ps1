@@ -14,22 +14,28 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$output_python   = "$PSScriptRoot\python.zip"
-$output_vs       = "$PSScriptRoot\vs.7z"
-$output_vseditor = "$PSScriptRoot\vseditor.7z"
-$output_pip      = "$PSScriptRoot\$vsfolder\get-pip.py"
-$output_mveditor = "$PSScriptRoot\mveditor.zip"
-$output_wobbly   = "$PSScriptRoot\wobbly.7z"
-$output_d2vwitch = "$PSScriptRoot\d2vwitch.7z"
+$url_python    = "https://www.python.org/ftp/python/3.7.4/python-3.7.4-embed-amd64.zip"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R47.2/VapourSynth64-Portable-R47.2.7z"
+$url_pip       = "https://bootstrap.pypa.io/get-pip.py"
+$url_vseditor  = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
+$url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
+$url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
+$url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
+$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.8/VSRepoGUI.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.6/pedeps-0.1.6-win64.zip"
 
-$url_python   = "https://www.python.org/ftp/python/3.7.4/python-3.7.4-embed-amd64.zip"
-$url_vs       = "https://github.com/vapoursynth/vapoursynth/releases/download/R47.2/VapourSynth64-Portable-R47.2.7z"
-$url_pip      = "https://bootstrap.pypa.io/get-pip.py"
-$url_vseditor = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
-$url_mveditor = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
-$url_wobbly   = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
-$url_d2vwitch = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
 
+$output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
+$output_vs        = "$PSScriptRoot\" + (Split-Path $url_vs -Leaf) 
+$output_vseditor  = "$PSScriptRoot\" + (Split-Path $url_vseditor -Leaf) 
+$output_pip       = "$PSScriptRoot\$vsfolder\get-pip.py"
+$output_mveditor  = "$PSScriptRoot\" + (Split-Path $url_mveditor -Leaf) 
+$output_wobbly    = "$PSScriptRoot\" + (Split-Path $url_wobbly -Leaf) 
+$output_d2vwitch  = "$PSScriptRoot\" + (Split-Path $url_d2vwitch -Leaf) 
+$output_vsrepogui = "$PSScriptRoot\" + (Split-Path $url_vsrepogui -Leaf) 
+$output_pedeps    = "$PSScriptRoot\" + (Split-Path $url_pedeps -Leaf) 
+
+ 
 
 function dl([string]$url, [string]$file, [string]$name)
 {
@@ -48,10 +54,11 @@ dl $url_python $output_python "Python"
 dl $url_vs $output_vs "VapourSynth portable"
 dl $url_vseditor $output_vseditor $url_vs $output_vs "VSEditor"
 dl $url_pip $output_pip "get-pip"
-dl $url_mveditor $output_mveditor "Multi-Viewer Editor"
+#dl $url_mveditor $output_mveditor "Multi-Viewer Editor"
 dl $url_wobbly $output_wobbly "Wobbly"
 dl $url_d2vwitch $output_d2vwitch "D2VWitch"
-
+dl $url_vsrepogui $output_vsrepogui "VSRepoGUI"
+dl $url_pedeps $output_pedeps "pedeps"
 
 cd $vsfolder_full
 if (-NOT (Test-Path "7z.exe")) {
@@ -65,9 +72,11 @@ Write-Output "Extract files..."
 .\7z.exe x $output_python -y
 .\7z.exe x $output_vseditor -y
 .\7z.exe x $output_vs -y
-.\7z.exe x $output_mveditor -y
+#.\7z.exe x $output_mveditor -y
 .\7z.exe x $output_wobbly -y
 .\7z.exe x $output_d2vwitch -y
+.\7z.exe x $output_vsrepogui -y
+.\7z.exe e $output_pedeps bin\listpedeps.exe -y
 
 Copy-Item -Path $PSScriptRoot\python37._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python37._pth"
 
