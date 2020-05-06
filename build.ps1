@@ -22,7 +22,7 @@ $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/d
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
 $url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.1/VSRepoGUI.zip"
-$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.8/pedeps-0.1.8-win64.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.9/pedeps-0.1.9-win64.zip"
 
 
 $output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
