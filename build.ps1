@@ -78,7 +78,7 @@ Write-Output "Extract files..."
 .\7z.exe x $output_vsrepogui -y
 .\7z.exe e $output_pedeps bin\listpedeps.exe -y
 
-Copy-Item -Path $PSScriptRoot\python37._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python37._pth"
+Copy-Item -Path $PSScriptRoot\python38._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python38._pth"
 
 
 Write-Output ""
