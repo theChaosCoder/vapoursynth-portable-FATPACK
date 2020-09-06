@@ -15,19 +15,21 @@ $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
 $url_python    = "https://www.python.org/ftp/python/3.8.5/python-3.8.5-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R51/VapourSynth64-Portable-R51.7z"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R52/VapourSynth64-Portable-R52.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor  = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
+$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R3-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
-$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.2/VSRepoGUI-0.9.2.zip"
+$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.5/VSRepoGUI-0.9.5.zip"
 $url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.9/pedeps-0.1.9-win64.zip"
 
 
 $output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
 $output_vs        = "$PSScriptRoot\" + (Split-Path $url_vs -Leaf) 
 $output_vseditor  = "$PSScriptRoot\" + (Split-Path $url_vseditor -Leaf) 
+$output_vseditor2 = "$PSScriptRoot\" + (Split-Path $url_vseditor2 -Leaf) 
 $output_pip       = "$PSScriptRoot\$vsfolder\get-pip.py"
 $output_mveditor  = "$PSScriptRoot\" + (Split-Path $url_mveditor -Leaf) 
 $output_wobbly    = "$PSScriptRoot\" + (Split-Path $url_wobbly -Leaf) 
@@ -52,7 +54,8 @@ function dl([string]$url, [string]$file, [string]$name)
 
 dl $url_python $output_python "Python"
 dl $url_vs $output_vs "VapourSynth portable"
-dl $url_vseditor $output_vseditor $url_vs $output_vs "VSEditor"
+dl $url_vseditor $output_vseditor "VSEditor"
+dl $url_vseditor2 $output_vseditor2 "VSEditor2"
 dl $url_pip $output_pip "get-pip"
 #dl $url_mveditor $output_mveditor "Multi-Viewer Editor"
 dl $url_wobbly $output_wobbly "Wobbly"
