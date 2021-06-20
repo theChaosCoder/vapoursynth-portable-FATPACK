@@ -14,15 +14,15 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$url_python    = "https://www.python.org/ftp/python/3.8.5/python-3.8.5-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R52/VapourSynth64-Portable-R52.7z"
+$url_python    = "https://www.python.org/ftp/python/3.9.5/python-3.9.5-embed-amd64.zip"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R53/VapourSynth64-Portable-R53.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor  = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
-$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R3-64bit.7z"
+$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R5.3-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
-$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.5/VSRepoGUI-0.9.5.zip"
+$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.6/VSRepoGUI-0.9.6.zip"
 $url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.9/pedeps-0.1.9-win64.zip"
 
 
@@ -54,7 +54,7 @@ function dl([string]$url, [string]$file, [string]$name)
 
 dl $url_python $output_python "Python"
 dl $url_vs $output_vs "VapourSynth portable"
-dl $url_vseditor $output_vseditor "VSEditor"
+#dl $url_vseditor $output_vseditor "VSEditor"
 dl $url_vseditor2 $output_vseditor2 "VSEditor2"
 dl $url_pip $output_pip "get-pip"
 #dl $url_mveditor $output_mveditor "Multi-Viewer Editor"
@@ -73,7 +73,8 @@ Write-Output ""
 Write-Output "Extract files..."
 ###Expand-Archive -Path $output_python -DestinationPath "$PSScriptRoot\$vsfolder" -Force
 .\7z.exe x $output_python -y
-.\7z.exe x $output_vseditor -y
+#.\7z.exe x $output_vseditor -y
+.\7z.exe x $output_vseditor2 -y
 .\7z.exe x $output_vs -y
 #.\7z.exe x $output_mveditor -y
 .\7z.exe x $output_wobbly -y
@@ -81,7 +82,7 @@ Write-Output "Extract files..."
 .\7z.exe x $output_vsrepogui -y
 .\7z.exe e $output_pedeps bin\listpedeps.exe -y
 
-Copy-Item -Path $PSScriptRoot\python38._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python38._pth"
+Copy-Item -Path $PSScriptRoot\python39._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python39._pth"
 
 
 Write-Output ""
