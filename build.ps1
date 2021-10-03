@@ -14,16 +14,16 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$url_python    = "https://www.python.org/ftp/python/3.9.5/python-3.9.5-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R53/VapourSynth64-Portable-R53.7z"
+$url_python    = "https://www.python.org/ftp/python/3.9.7/python-3.9.7-embed-amd64.zip"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R56/VapourSynth64-Portable-R56.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
-$url_vseditor  = "https://bitbucket.org/mystery_keeper/vapoursynth-editor/downloads/VapourSynthEditor-r19-64bit.7z"
-$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R5.3-64bit.7z"
+$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-3/VapourSynth-Editor-r19-mod-3-x86_64.7z"
+$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
-$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.6/VSRepoGUI-0.9.6.zip"
-$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.9/pedeps-0.1.9-win64.zip"
+$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.7/VSRepoGUI-0.9.7.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.10/pedeps-0.1.10-win64.zip"
 
 
 $output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
@@ -54,7 +54,7 @@ function dl([string]$url, [string]$file, [string]$name)
 
 dl $url_python $output_python "Python"
 dl $url_vs $output_vs "VapourSynth portable"
-#dl $url_vseditor $output_vseditor "VSEditor"
+dl $url_vseditor $output_vseditor "VSEditor"
 dl $url_vseditor2 $output_vseditor2 "VSEditor2"
 dl $url_pip $output_pip "get-pip"
 #dl $url_mveditor $output_mveditor "Multi-Viewer Editor"
@@ -73,8 +73,8 @@ Write-Output ""
 Write-Output "Extract files..."
 ###Expand-Archive -Path $output_python -DestinationPath "$PSScriptRoot\$vsfolder" -Force
 .\7z.exe x $output_python -y
-#.\7z.exe x $output_vseditor -y
-.\7z.exe x $output_vseditor2 -y
+.\7z.exe x $output_vseditor -y
+#.\7z.exe x $output_vseditor2 -y
 .\7z.exe x $output_vs -y
 #.\7z.exe x $output_mveditor -y
 .\7z.exe x $output_wobbly -y
@@ -112,9 +112,7 @@ Remove-Item –path vapoursynth64\plugins\.keep
 
 
 Write-Output ""
-Write-Output "fin"
-Write-Output "(/¯0 - 0)/¯  You're almost done master builder"
-Write-Output ""
-Write-Output "MANUAL TASK: copy x264.exe, x265.exe to bin and all plugins into the plugins folder"
+Write-Output "Done."
+Write-Output "MANUAL TASK: copy x264.exe, x265.exe to bin and all plugins into the plugins folder."
 Write-Output ""
 pause
