@@ -3,22 +3,19 @@ import functools
 import vapoursynth as vs
 
 import mvsfunc as mvf
-import havsfunc as haf
+import muvsfunc as muf
 
-core = vs.get_core()
+core = vs.core
 
 time = 2.0
 
-reta = core.colorbars.ColorBars(resolution=2, format=vs.YUV444P10).std.DuplicateFrames([0] * 120)
+reta = muf.ColorBarsHD().std.DuplicateFrames([0] * 120)
 retb = reta.std.Invert().std.FlipVertical().grain.Add(var = 200)
 
 # Animation powered by vcmohans awesome vctrans plugin
 # Source: http://www.avisynth.nl/users/vcmohan/vctrans/vctrans.html
 
-ret = core.trans.Accord(reta, clipb = retb, overlap = time, twin = 0, dir = 1, open = 0)
-ret = ret + core.trans.Accord(retb, clipb = reta, overlap = time, twin = 1, dir = 1, open = 0)
-ret = ret + core.trans.Accord(reta, clipb = retb, overlap = time, twin = 0, dir = 0, open = 0)
-ret = ret + core.trans.Accord(retb, clipb = reta, overlap = time, twin = 1, dir = 0, open = 0)
+ret = core.trans.Accord(retb, clipb = reta, overlap = time, twin = 1, dir = 0, open = 0)
 vid = core.text.Text(ret, "Accord", 2)
 ret = core.trans.Bubbles(reta, clipb = retb, overlap = time, static = 0)
 ret = ret + core.trans.Bubbles(retb, clipb = reta, overlap = time, static = 1)

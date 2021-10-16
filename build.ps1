@@ -15,7 +15,7 @@ $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
 $url_python    = "https://www.python.org/ftp/python/3.9.7/python-3.9.7-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R56/VapourSynth64-Portable-R56.7z"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R57/VapourSynth64-Portable-R57.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
 $url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-3/VapourSynth-Editor-r19-mod-3-x86_64.7z"
 $url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6-64bit.7z"

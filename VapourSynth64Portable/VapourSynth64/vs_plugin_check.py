@@ -35,7 +35,7 @@ def main(argv):
 			exit("\n\rUsage: vs_plugin_check.py <path-to-vapoursynth-plugins-folder>\n\r")
 		#print("\nFound the following path:", path)
 	
-	core = vs.get_core()
+	core = vs.core
 	print_version(core)
 	plugin_dir = glob.glob(path + '/*.dll')
 	

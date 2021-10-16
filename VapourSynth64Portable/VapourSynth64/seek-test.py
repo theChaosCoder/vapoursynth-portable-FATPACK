@@ -26,7 +26,7 @@ parser.add_argument('end_frame', nargs='?', type=int, help='End frame')
 parser.add_argument('-f', choices=choices_filter, dest='source_filter', help='Set source filter')
 args = parser.parse_args()
 
-c = vs.get_core(add_cache=False)
+c = vs.core
 
 extension = os.path.splitext(args.file)[1]
 if(extension == ".d2v"):
@@ -53,6 +53,8 @@ if(args.source_filter == "ffms2seek0"):
 	clip = c.ffms2.Source(args.file, seekmode=0)
 if(args.source_filter == "lsmas"):
 	clip = c.lsmas.LWLibavSource(args.file)
+if(args.source_filter == "lsmasav"):
+	clip = c.lsmas.LibavSMASHSource(args.file)
 if(args.source_filter == "d2v"):
 	clip = c.d2v.Source(args.file, rff=False)
 if(args.source_filter == "dgi"):
