@@ -1,4 +1,4 @@
-﻿#
+#
 # A very simple VapourSynth Portable FATPACK build script
 # https://forum.doom9.org/showthread.php?t=175529
 #
@@ -14,16 +14,16 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$url_python    = "https://www.python.org/ftp/python/3.9.7/python-3.9.7-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R57/VapourSynth64-Portable-R57.7z"
+$url_python    = "https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-amd64.zip"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R61/VapourSynth64-Portable-R61.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
-$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-3/VapourSynth-Editor-r19-mod-3-x86_64.7z"
-$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6-64bit.7z"
+$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-5.5/VapourSynth.Editor-r19-mod-5.5-Qt6.7z"
+$url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6.7-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
-$url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v4/wobbly-v4-win64.7z"
+$url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v5/wobbly-v5-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
-$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.7/VSRepoGUI-0.9.7.zip"
-$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.10/pedeps-0.1.10-win64.zip"
+$url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.8/VSRepoGUI-0.9.8.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.11/pedeps-0.1.11-win64.zip"
 
 
 $output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
