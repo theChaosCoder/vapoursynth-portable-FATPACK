@@ -94,11 +94,10 @@ Write-Output "Download / install python packages via pip..."
 #.\python.exe -m yuuno.console_scripts jupyter install --no-warn-script-location
 
 
-$vsfolder_full_lower = "$vsfolder_full".ToLower()
 Write-Output ""
-Write-Output "Replacing string #!C:\mypath\python.exe to #!python.exe for Scripts\*.exe"
-Get-ChildItem "$vsfolder_full_lower\Scripts\*.exe" -Recurse | ForEach {
-	(Get-Content -Raw $_ | ForEach  { $_.Replace("#!$vsfolder_full_lower\", "#!") }) |
+Write-Output "Replacing string #!$vsfolder_full\python.exe to #!python.exe for Scripts\*.exe"
+Get-ChildItem "$vsfolder_full\Scripts\*.exe" -Recurse | ForEach {
+	(Get-Content -Raw $_ | ForEach  { $_.Replace("#!$vsfolder_full\", "#!") }) |
 	Set-Content -NoNewline $_
 }
 
