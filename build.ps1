@@ -14,6 +14,7 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
+$url_7zr       = "https://www.7-zip.org/a/7zr.exe"
 $url_python    = "https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-amd64.zip"
 $url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R61/VapourSynth64-Portable-R61.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
@@ -26,6 +27,7 @@ $url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v
 $url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.11/pedeps-0.1.11-win64.zip"
 
 
+$output_7zr       = "$PSScriptRoot\7zr.exe" 
 $output_python    = "$PSScriptRoot\" + (Split-Path $url_python -Leaf) 
 $output_vs        = "$PSScriptRoot\" + (Split-Path $url_vs -Leaf) 
 $output_vseditor  = "$PSScriptRoot\" + (Split-Path $url_vseditor -Leaf) 
@@ -52,6 +54,7 @@ function dl([string]$url, [string]$file, [string]$name)
 # https://stackoverflow.com/a/15883080/8444552
 # comma = array!
 
+dl $url_7zr $output_7zr "7-Zip console exe"
 dl $url_python $output_python "Python"
 dl $url_vs $output_vs "VapourSynth portable"
 dl $url_vseditor $output_vseditor "VSEditor"
@@ -64,18 +67,20 @@ dl $url_vsrepogui $output_vsrepogui "VSRepoGUI"
 dl $url_pedeps $output_pedeps "pedeps"
 
 cd $vsfolder_full
-if (-NOT (Test-Path "7z.exe")) {
-    Write-Output (Get-Item -Path ".\").FullName
-    throw "7z.exe not found."
-}
-
 Write-Output ""
 Write-Output "Extract files..."
+
+# Extract VS with the downloaded 7-zip binary to get its bundled 7z.exe
+& $output_7zr x $output_vs -y
+if (-NOT (Test-Path "7z.exe")) {
+    Write-Output (Get-Item -Path ".\").FullName
+    throw "7z.exe not found after extracting VapourSynth!"
+}
+
 ###Expand-Archive -Path $output_python -DestinationPath "$PSScriptRoot\$vsfolder" -Force
 .\7z.exe x $output_python -y
 .\7z.exe x $output_vseditor -y
 #.\7z.exe x $output_vseditor2 -y
-.\7z.exe x $output_vs -y
 #.\7z.exe x $output_mveditor -y
 .\7z.exe x $output_wobbly -y
 .\7z.exe x $output_d2vwitch -y
