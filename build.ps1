@@ -105,8 +105,8 @@ Get-ChildItem "$vsfolder_full_lower\Scripts\*.exe" -Recurse | ForEach {
 
 Write-Output ""
 Write-Output "Optimize / Cleanup..."
-Remove-Item –path VapourSynthMultiViewer-x86.exe
-Remove-Item –path VapourSynthMultiViewer-x86.exe.config
+if (Test-Path VapourSynthMultiViewer-x86.exe)        { Remove-Item –path VapourSynthMultiViewer-x86.exe        }
+if (Test-Path VapourSynthMultiViewer-x86.exe.config) { Remove-Item –path VapourSynthMultiViewer-x86.exe.config }
 Remove-Item –path get-pip.py
 Remove-Item –path vapoursynth64\plugins\.keep
 
