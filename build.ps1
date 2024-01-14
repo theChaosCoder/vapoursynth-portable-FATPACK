@@ -14,17 +14,17 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$url_7zr       = "https://www.7-zip.org/a/7zr.exe"
+$url_7zr       = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
 $url_python    = "https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-amd64.zip"
 $url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R61/VapourSynth64-Portable-R61.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
-$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-5.5/VapourSynth.Editor-r19-mod-5.5-Qt6.7z"
+$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-6.3/VapourSynth_Editor-r19-mod-6.3.7z"
 $url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6.7-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v5/wobbly-v5-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
 $url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.8/VSRepoGUI-0.9.8.zip"
-$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.11/pedeps-0.1.11-win64.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.13/pedeps-0.1.13-win64.zip"
 
 
 $output_7zr       = "$PSScriptRoot\7zr.exe" 
