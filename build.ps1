@@ -93,10 +93,10 @@ Copy-Item -Path $PSScriptRoot\python311._pth -Destination "$PSScriptRoot\VapourS
 Write-Output ""
 Write-Output "Download / install python packages via pip..."
 .\python.exe get-pip.py
-.\python.exe -m pip install tqdm --no-warn-script-location
-.\python.exe -m pip install numpy --no-warn-script-location
-###.\python.exe -m pip install yuuno --no-warn-script-location
-#.\python.exe -m yuuno.console_scripts jupyter install --no-warn-script-location
+.\python.exe -m pip install tqdm
+.\python.exe -m pip install numpy
+###.\python.exe -m pip install yuuno
+#.\python.exe -m yuuno.console_scripts jupyter install
 
 
 Write-Output ""
