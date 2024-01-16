@@ -14,17 +14,17 @@ $root = $PSScriptRoot
 $vsfolder = "VapourSynth64Portable\VapourSynth64"
 $vsfolder_full = "$PSScriptRoot\VapourSynth64Portable\VapourSynth64"
 
-$url_7zr       = "https://www.7-zip.org/a/7zr.exe"
-$url_python    = "https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-amd64.zip"
-$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R61/VapourSynth64-Portable-R61.7z"
+$url_7zr       = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
+$url_python    = "https://www.python.org/ftp/python/3.11.7/python-3.11.7-embed-amd64.zip"
+$url_vs        = "https://github.com/vapoursynth/vapoursynth/releases/download/R65/VapourSynth64-Portable-R65.7z"
 $url_pip       = "https://bootstrap.pypa.io/get-pip.py"
-$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-5.5/VapourSynth.Editor-r19-mod-5.5-Qt6.7z"
+$url_vseditor  = "https://github.com/YomikoR/VapourSynth-Editor/releases/download/r19-mod-6.3/VapourSynth_Editor-r19-mod-6.3.7z"
 $url_vseditor2 = "https://bitbucket.org/gundamftw/vapoursynth-editor-2/downloads/VapourSynthEditor2-R6.7-64bit.7z"
 $url_mveditor  = "https://github.com/mysteryx93/VapourSynthViewer.NET/releases/download/v0.9.3/VapourSynthMultiViewer-v0.9.3.zip"
 $url_wobbly    = "https://github.com/dubhater/Wobbly/releases/download/v5/wobbly-v5-win64.7z"
 $url_d2vwitch  = "https://github.com/dubhater/D2VWitch/releases/download/v3/D2VWitch-v3-win64.7z"
 $url_vsrepogui = "https://github.com/theChaosCoder/VSRepoGUI/releases/download/v0.9.8/VSRepoGUI-0.9.8.zip"
-$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.11/pedeps-0.1.11-win64.zip"
+$url_pedeps    = "https://github.com/brechtsanders/pedeps/releases/download/0.1.13/pedeps-0.1.13-win64.zip"
 
 
 $output_7zr       = "$PSScriptRoot\7zr.exe" 
@@ -87,16 +87,16 @@ if (-NOT (Test-Path "7z.exe")) {
 .\7z.exe x $output_vsrepogui -y
 .\7z.exe e $output_pedeps bin\listpedeps.exe -y
 
-Copy-Item -Path $PSScriptRoot\python310._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python310._pth"
+Copy-Item -Path $PSScriptRoot\python311._pth -Destination "$PSScriptRoot\VapourSynth64Portable\VapourSynth64\python311._pth"
 
 
 Write-Output ""
 Write-Output "Download / install python packages via pip..."
 .\python.exe get-pip.py
-.\python.exe -m pip install tqdm --no-warn-script-location
-.\python.exe -m pip install numpy --no-warn-script-location
-###.\python.exe -m pip install yuuno --no-warn-script-location
-#.\python.exe -m yuuno.console_scripts jupyter install --no-warn-script-location
+.\python.exe -m pip install tqdm
+.\python.exe -m pip install numpy
+###.\python.exe -m pip install yuuno
+#.\python.exe -m yuuno.console_scripts jupyter install
 
 
 Write-Output ""
